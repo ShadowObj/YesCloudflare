@@ -5,7 +5,8 @@
 Telegram反馈群: https://t.me/+ft-zI76oovgwNmRh/
 
 ```
-Usage of ShadowObj/yescloudflare
+Usage of ShadowObj/yescloudflare:
+  
   -A    自动获取下一页内容 (默认需要确认)
   -asn int
         指定ASN
@@ -21,4 +22,6 @@ Usage of ShadowObj/yescloudflare
         指定端口 (默认全部)
   -region string
         指定地区
+  --help 
+        获取帮助
 ```

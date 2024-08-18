@@ -77,7 +77,7 @@ func execute() {
 	defer f.Close()
 	writer := bufio.NewWriter(f)
 	defer writer.Flush()
-	c = &client.Censys{Key: key, Client: &http.Client{}}
+	c = &client.Censys{Key: key, Client: &http.Client{}, NoRepeat: norepeat}
 	for i := 0; i < 100; i++ {
 		page := i + 1
 		if !auto {
