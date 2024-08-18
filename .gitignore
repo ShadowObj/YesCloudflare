@@ -1,0 +1,5 @@
+/.vscode
+/dist
+/*.bat
+/*.sh
+ip.txt
