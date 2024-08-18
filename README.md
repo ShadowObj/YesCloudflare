@@ -19,7 +19,7 @@ Usage of ShadowObj/yescloudflare:
   --auto
         自动获取下一页内容 (默认需要确认)
   --file string
-        指定输出文件 (默认ip.txt) (default "ip.txt")
+        指定输出文件 (默认ip.txt)
   --key string
         指定API密钥
   --norepeat
