@@ -12,25 +12,28 @@ Telegram反馈群: https://t.me/+ft-zI76oovgwNmRh/
 
 ```
 Usage of ShadowObj/yescloudflare:
-  
-  -A    自动获取下一页内容 (默认需要确认)
-  --asn int
-        指定ASN
-  --auto
-        自动获取下一页内容 (默认需要确认)
-  --file string
-        指定输出文件 (默认ip.txt)
-  --key string
-        指定API密钥
-  --norepeat
-        自动去除重复IP (默认不去除)
-  --port int
-        指定端口 (默认全部)
-  --region string
-        指定地区
-  --help 
-        获取帮助
+
+-c/-config string
+          指定配置文件 (默认config.toml)
+          注意: 指定配置文件不会覆盖命令行参数。
+-o/-output ip.txt
+          指定输出文件 (默认ip.txt)
+-A/-auto
+          自动获取下一页内容 (默认需要确认)
+-key apikey
+          指定APIKEY
+-norepeat
+          自动去除重复IP (默认不去除)
+-port port
+          指定端口 (默认全部, 可用英文逗号分隔)
+-asn asn1,asn2
+          指定ASN (默认全部, 可用英文逗号分隔)
+-region CN,HK,JP,KR,TW
+          指定地区ISO3166二字码
+          (默认全部, 可用英文逗号分隔)
 ```
+
+附: [config.toml 配置文件完整示例](https://github.com/ShadowObj/YesCloudflare/blob/main/config.toml)
 
 ### 如何获取APIKEY
 
