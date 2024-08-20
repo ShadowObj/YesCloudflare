@@ -14,9 +14,9 @@ import (
 )
 
 type Censys struct {
-	Key      string
-	Client   *http.Client
-	NoRepeat bool
+	Key    string
+	Client *http.Client
+	Conf   *cmd.Config
 }
 
 type Hit struct {
@@ -24,42 +24,48 @@ type Hit struct {
 	Port string
 }
 
-func Exec(conf *cmd.Config, c *Censys) {
+// Exec performs a task with censys client
+func Exec(c *Censys) {
 	var (
 		f    *os.File
 		err  error
 		hits *[]*Hit
 	)
+	conf := c.Conf
+	logger := conf.GetLogger()
 	if f, err = os.Create(conf.Output); err != nil {
-		conf.GetLogger().Fatalf("Open %s failed: %v", conf.Output, err)
+		logger.Fatalf("Open %s failed: %v", conf.Output, err)
 	}
 	defer f.Close()
 	writer := bufio.NewWriter(f)
 	defer writer.Flush()
-	for i := 0; i < 100; i++ {
-		page := i + 1
+	for i := c.Conf.Page.Start; i < (c.Conf.Page.End + 1); i++ {
 		if !conf.Auto {
 			inputT := ""
-			conf.GetLogger().Printf("继续获取第 %d 页内容? (Y/N, Default Y): ", page)
+			logger.Printf("继续获取第 %d 页内容? (Y/N, Default Y): ", i)
 			fmt.Scanln(&inputT)
 			if inputT == "N" {
 				break
 			}
 		}
-		conf.GetLogger().Printf("正在获取第 %d 页内容...\n", page)
-		if hits, err = c.get(page, conf.GetQuery()); err != nil {
-			conf.GetLogger().Fatalf("Get failed: %v\n(page: %d, query: %s)", err, page, conf.GetQuery())
+		logger.Printf("正在获取第 %d 页内容...\n", i)
+		if hits, err = c.get(i, conf.GetQuery()); err != nil {
+			logger.Fatalf("Get failed: %v\n(page: %d, query: %s)", err, i, conf.GetQuery())
 		}
-		conf.GetLogger().Printf("在第 %d 页中发现了 %d 个节点.\n", page, len(*hits))
+		logger.Printf("在第 %d 页中发现了 %d 个节点.\n", i, len(*hits))
 		for _, v := range *hits {
-			if _, err = writer.WriteString(v.IP + ":" + v.Port + "\n"); err != nil {
-				conf.GetLogger().Fatalf("Unable to write into buffer: %v", err)
+			ip := v.IP
+			if strings.Contains(v.IP, ":") {
+				ip = "[" + v.IP + "]"
+			}
+			if _, err = writer.WriteString(ip + ":" + v.Port + "\n"); err != nil {
+				logger.Fatalf("Unable to write into buffer: %v", err)
 			}
 		}
 	}
 }
 
-func (r *Censys) get(page int, query string) (*[]*Hit, error) {
+func (c *Censys) get(page int, query string) (*[]*Hit, error) {
 	var (
 		err     error
 		hits    []*Hit
@@ -67,10 +73,10 @@ func (r *Censys) get(page int, query string) (*[]*Hit, error) {
 		rawResp *http.Response
 	)
 
-	if req, err = r.newRequest(page, query); err != nil {
+	if req, err = c.newRequest(page, query); err != nil {
 		return nil, err
 	}
-	if rawResp, err = r.Client.Do(req); err != nil {
+	if rawResp, err = c.Client.Do(req); err != nil {
 		return nil, err
 	}
 	respData, _ := io.ReadAll(rawResp.Body)
@@ -78,7 +84,7 @@ func (r *Censys) get(page int, query string) (*[]*Hit, error) {
 	respStr := string(respData)
 	for _, v := range gjson.Get(respStr, "result.hits").Array() {
 		ip := v.Get("ip").String()
-		if r.NoRepeat {
+		if c.Conf.Norepeat {
 			s := v.Get("services.#(service_name==\"HTTP\")")
 			hits = append(hits, &Hit{
 				IP:   ip,
@@ -96,10 +102,10 @@ func (r *Censys) get(page int, query string) (*[]*Hit, error) {
 	return &hits, nil
 }
 
-func (r *Censys) newRequest(page int, query string) (*http.Request, error) {
+func (c *Censys) newRequest(page int, query string) (*http.Request, error) {
 	req, err := http.NewRequest("GET", "https://search.censys.io/api/v2/hosts/search?per_page=100&virtual_hosts=EXCLUDE&sort=RELEVANCE", strings.NewReader(""))
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Basic "+r.Key)
+	req.Header.Set("Authorization", "Basic "+c.Key)
 	q := req.URL.Query()
 	q.Add("q", query)
 	q.Add("page", strconv.Itoa(page))

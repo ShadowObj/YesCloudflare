@@ -13,6 +13,7 @@ type tomlConfig struct {
 	Port   string
 	ASN    string
 	Region string
+	Page   string
 }
 
 func (tc *tomlConfig) Parse(data string) error {
@@ -24,7 +25,7 @@ func (tc *tomlConfig) Parse(data string) error {
 	return nil
 }
 
-func (tc *tomlConfig) Pairing(conf *Config) {
+func (tc *tomlConfig) Pairing(conf *Config) error {
 	conf.Key = tc.Key
 	conf.Output = tc.Output
 	conf.Auto = tc.Auto
@@ -32,4 +33,6 @@ func (tc *tomlConfig) Pairing(conf *Config) {
 	conf.Port.Set(tc.Port)
 	conf.ASN.Set(tc.ASN)
 	conf.Region.Set(tc.Region)
+	conf.Page.Set(tc.Page)
+	return nil
 }

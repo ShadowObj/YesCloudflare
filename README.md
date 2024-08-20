@@ -31,6 +31,9 @@ Usage of ShadowObj/yescloudflare:
 -region CN,HK,JP,KR,TW
           指定地区ISO3166二字码
           (默认全部, 可用英文逗号分隔)
+-page 1-10
+	  指定需要查询的页面
+	  (默认1-10, 范围应为第1到100页)
 ```
 
 附: [config.toml 配置文件完整示例](https://github.com/ShadowObj/YesCloudflare/blob/main/config.toml)

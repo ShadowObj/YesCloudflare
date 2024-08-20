@@ -36,6 +36,9 @@ Usage of YesCloudflare:
 -region CN,HK,JP,KR,TW
 	  指定地区ISO3166二字码
 	  (默认全部, 可用英文逗号分隔)
+-page 1-10
+	  指定需要查询的页面
+	  (默认1-10, 范围应为第1到100页)
 `
 )
 
@@ -44,13 +47,14 @@ func parseConf(conf *cmd.Config) {
 	flag.StringVar(&conf.Config, "config", "config.toml", "")
 	flag.StringVar(&conf.Output, "o", "ip.txt", "")
 	flag.StringVar(&conf.Output, "output", "ip.txt", "")
+	flag.StringVar(&conf.Key, "key", "", "")
 	flag.BoolVar(&conf.Auto, "A", false, "")
 	flag.BoolVar(&conf.Auto, "auto", false, "")
-	flag.StringVar(&conf.Key, "key", "", "")
 	flag.BoolVar(&conf.Norepeat, "norepeat", false, "")
 	flag.Var(&conf.Port, "port", "")
 	flag.Var(&conf.ASN, "asn", "")
 	flag.Var(&conf.Region, "region", "")
+	flag.Var(&conf.Page, "page", "")
 	flag.Usage = func() { fmt.Print(help) }
 	flag.Parse()
 }
@@ -61,7 +65,7 @@ func main() {
 	conf := &cmd.Config{}
 	parseConf(conf)
 	conf.Check()
-	client.Exec(conf, &client.Censys{
-		Key: conf.Key, Client: &http.Client{}, NoRepeat: conf.Norepeat,
+	client.Exec(&client.Censys{
+		Key: conf.Key, Client: &http.Client{}, Conf: conf,
 	})
 }
