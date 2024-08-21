@@ -54,6 +54,9 @@ func (c *Config) Check() {
 	if c.Page.Start == 0 || c.Page.End == 0 {
 		c.Page.Start, c.Page.End = 1, 10
 	}
+	if c.Output == "" {
+		c.Output = "ip.txt"
+	}
 }
 
 func (c *Config) GetQuery() string {
