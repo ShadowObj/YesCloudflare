@@ -65,7 +65,6 @@ func main() {
 	conf := &cmd.Config{}
 	parseConf(conf)
 	conf.Check()
-	client.Exec(&client.Censys{
-		Key: conf.Key, Client: &http.Client{}, Conf: conf,
-	})
+	cli := &client.Censys{Key: conf.Key, Client: &http.Client{}}
+	cli.Exec(conf)
 }

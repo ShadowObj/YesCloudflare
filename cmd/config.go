@@ -7,6 +7,13 @@ import (
 	//"github.com/ShadowObj/yescloudflare/log"
 )
 
+const (
+	defaultKeyLen    = 92
+	defaultPageStart = 1
+	defaultPageEnd   = 10
+	defaultOutput    = "ip.txt"
+)
+
 type Config struct {
 	Key      string
 	Port     PortList
@@ -35,27 +42,27 @@ func (c *Config) Check() {
 		}
 		c.logger.Printf("使用配置文件 %s 中的配置.", c.Config)
 	}
-	if c.Key == "" || len(c.Key) != 92 {
+	if c.Key == "" || len(c.Key) != defaultKeyLen {
 		c.logger.Fatalf("Correct APIKEY is Required! (-key APIKEY)")
 	}
 	c.logger.Printf("APIKEY: %s****%s\n", c.Key[:2], c.Key[len(c.Key)-2:])
-	c.query = "(NOT autonomous_system.asn=13335) and (services.software.vendor='CloudFlare')"
-	if len(c.Port) > 0 {
-		c.query += " and (services.port=" + strings.Join([]string(c.Port), " or services.port=") + ")"
+	c.query = "NOT autonomous_system.asn={13335,209242} and services.software.vendor='CloudFlare'"
+	if len(c.Port.intS) > 0 {
+		c.query += " and services.port={" + strings.Join(c.Port.strS, ",") + "}"
 	} else {
 		c.logger.Printf("未指定端口，不会有端口被过滤.\n")
 	}
 	if len(c.ASN) > 0 {
-		c.query += " and (autonomous_system.asn=" + strings.Join([]string(c.ASN), " or autonomous_system.asn=") + ")"
+		c.query += " and autonomous_system.asn={" + strings.Join([]string(c.ASN), ",") + "}"
 	}
 	if len(c.Region) > 0 {
-		c.query += " and (location.country_code=" + strings.Join([]string(c.Region), " or location.country_code=") + ")"
+		c.query += " and location.country_code={" + strings.Join([]string(c.Region), ",") + "}"
 	}
 	if c.Page.Start == 0 || c.Page.End == 0 {
-		c.Page.Start, c.Page.End = 1, 10
+		c.Page.Start, c.Page.End = defaultPageStart, defaultPageEnd
 	}
 	if c.Output == "" {
-		c.Output = "ip.txt"
+		c.Output = defaultOutput
 	}
 }
 

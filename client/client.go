@@ -16,22 +16,20 @@ import (
 type Censys struct {
 	Key    string
 	Client *http.Client
-	Conf   *cmd.Config
 }
 
 type Hit struct {
 	IP   string
-	Port string
+	Port int
 }
 
 // Exec performs a task with censys client
-func Exec(c *Censys) {
+func (c *Censys) Exec(conf *cmd.Config) {
 	var (
 		f    *os.File
 		err  error
 		hits *[]*Hit
 	)
-	conf := c.Conf
 	logger := conf.GetLogger()
 	if f, err = os.Create(conf.Output); err != nil {
 		logger.Fatalf("Open %s failed: %v", conf.Output, err)
@@ -39,7 +37,7 @@ func Exec(c *Censys) {
 	defer f.Close()
 	writer := bufio.NewWriter(f)
 	defer writer.Flush()
-	for i := c.Conf.Page.Start; i < (c.Conf.Page.End + 1); i++ {
+	for i := conf.Page.Start; i < (conf.Page.End + 1); i++ {
 		if !conf.Auto {
 			inputT := ""
 			logger.Printf("继续获取第 %d 页内容? (Y/N, Default Y): ", i)
@@ -49,7 +47,7 @@ func Exec(c *Censys) {
 			}
 		}
 		logger.Printf("正在获取第 %d 页内容...\n", i)
-		if hits, err = c.get(i, conf.GetQuery()); err != nil {
+		if hits, err = c.get(i, conf.GetQuery(), conf.Norepeat); err != nil {
 			logger.Fatalf("Get failed: %v\n(page: %d, query: %s)", err, i, conf.GetQuery())
 		}
 		logger.Printf("在第 %d 页中发现了 %d 个节点.\n", i, len(*hits))
@@ -58,43 +56,44 @@ func Exec(c *Censys) {
 			if strings.Contains(v.IP, ":") {
 				ip = "[" + v.IP + "]"
 			}
-			if _, err = writer.WriteString(ip + ":" + v.Port + "\n"); err != nil {
+			if !conf.Port.Contains(v.Port) {
+				continue
+			}
+			if _, err = writer.WriteString(ip + ":" + strconv.Itoa(v.Port) + "\n"); err != nil {
 				logger.Fatalf("Unable to write into buffer: %v", err)
 			}
 		}
 	}
 }
 
-func (c *Censys) get(page int, query string) (*[]*Hit, error) {
+func (c *Censys) get(page int, query string, norepeat bool) (*[]*Hit, error) {
 	var (
-		err     error
-		hits    []*Hit
-		req     *http.Request
-		rawResp *http.Response
+		err  error
+		hits []*Hit
+		req  *http.Request
+		resp *http.Response
 	)
 
 	if req, err = c.newRequest(page, query); err != nil {
 		return nil, err
 	}
-	if rawResp, err = c.Client.Do(req); err != nil {
+	if resp, err = c.Client.Do(req); err != nil {
 		return nil, err
 	}
-	respData, _ := io.ReadAll(rawResp.Body)
-	rawResp.Body.Close()
-	respStr := string(respData)
-	for _, v := range gjson.Get(respStr, "result.hits").Array() {
+	respData, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	for _, v := range gjson.Get(string(respData), "result.hits").Array() {
 		ip := v.Get("ip").String()
-		if c.Conf.Norepeat {
-			s := v.Get("services.#(service_name==\"HTTP\")")
+		if norepeat {
 			hits = append(hits, &Hit{
 				IP:   ip,
-				Port: s.Get("port").String(),
+				Port: int(v.Get("services.#(service_name==\"HTTP\").port").Int()),
 			})
 		} else {
-			for _, s := range v.Get("services.#(service_name==\"HTTP\")#").Array() {
+			for _, port := range v.Get("services.#(service_name==\"HTTP\")#.port").Array() {
 				hits = append(hits, &Hit{
 					IP:   ip,
-					Port: s.Get("port").String(),
+					Port: int(port.Int()),
 				})
 			}
 		}
