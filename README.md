@@ -6,8 +6,6 @@
 
 Telegram反馈群: https://t.me/+ft-zI76oovgwNmRh/
 
-点一下Star是最大的支持！谢谢！
-
 ### 用法 Usage
 
 ```
@@ -36,7 +34,9 @@ Usage of ShadowObj/yescloudflare:
 	  (默认1-10, 范围应为第1到100页)
 ```
 
-附: [config.toml 配置文件完整示例](https://github.com/ShadowObj/YesCloudflare/blob/main/config.toml)
+附: 
+1. [config.toml 配置文件完整示例](https://github.com/ShadowObj/YesCloudflare/blob/main/config.toml)
+2. [小白向 - 如何获取Cloudflare反代IP列表指北](https://telegra.ph/%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96Cloudflare%E5%8F%8D%E4%BB%A3IP%E5%88%97%E8%A1%A8%E6%8C%87%E5%8C%97-08-21)
 
 ### 如何获取APIKEY
 
